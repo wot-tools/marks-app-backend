@@ -4,19 +4,32 @@ using System.Text;
 
 namespace MarksAppBackend
 {
+    internal class EventStoredArgs : EventArgs
+    {
+        public DomainEventBase Event { get; private set; }
+
+        public EventStoredArgs(DomainEventBase @event)
+        {
+            Event = @event;
+        }
+    }
+
     internal class EventProcessor
     {
         private IEventStore EventStore;
+
+        public event EventHandler<EventStoredArgs> EventStored;
 
         public EventProcessor(IEventStore eventStore)
         {
             EventStore = eventStore;
         }
 
-        public void Process(DomainEventBase e)
+        public T Process<T>(T e) where T: DomainEventBase
         {
             EventStore.Store(e);
-            //TODO: process event already when saving?
+            EventStored?.Invoke(this, new EventStoredArgs(e));
+            return e;
         }
     }
 }

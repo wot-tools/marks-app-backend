@@ -31,8 +31,10 @@ namespace MarksAppBackend
 
         public void Store(DomainEventBase e)
         {
-            MySqlCommand command = new MySqlCommand("INSERT INTO events VALUES(?number, ?guid, ?occured, ?recorded, ?data);", Connection);
-            command.Parameters.AddWithValue("number", e.Number);
+            // LAST_INSERT_ID() is not thread safe
+            MySqlCommand command = new MySqlCommand(
+                @"INSERT INTO events(guid, occured, recorded, data)
+                VALUES(?guid, ?occured, ?recorded, ?data); SELECT LAST_INSERT_ID();", Connection);
             command.Parameters.AddWithValue("guid", e.Guid);
             command.Parameters.AddWithValue("occured", e.Occured);
             command.Parameters.AddWithValue("recorded", e.Recorded);
@@ -41,7 +43,7 @@ namespace MarksAppBackend
 
             command.Parameters.AddWithValue("data", jsonData);
 
-            command.ExecuteNonQuery();
+            e.SetNumber((ulong)command.ExecuteScalar());
         }
     }
 }

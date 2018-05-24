@@ -14,7 +14,7 @@ namespace MarksAppBackend
             DataBaseEventStore eventStore = new DataBaseEventStore(Settings.Instance.Database);
             EventProcessor eventProcessor = new EventProcessor(eventStore);
 
-            eventProcessor.Process(new PlayerCreatedEvent(12345, DateTime.Now));
+            
         }
 
         /*

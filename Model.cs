@@ -17,15 +17,16 @@ namespace MarksAppBackend
         public IEnumerable<int> OneMarks => _OneMarks;
         public Guid ClanGuid { get; private set; }
 
-        internal void HandleEvent(DomainObjectChangedEvent e)
+        private Player() { }
+
+        public static Player Create(EventProcessor processor, int id)
         {
-            switch (e)
-            {
-                case MarkObtainedEvent e1: HandleMarkObtained(e1); break;
-            }
+            var @event = processor.Process(new PlayerCreatedEvent(id, DateTime.Now));
+
+
         }
 
-        private void HandleMarkObtained(MarkObtainedEvent e)
+        internal void HandleEvent(MarkObtainedEvent e)
         {
             void addMark(int level, List<int> list, Action deeper)
             {

@@ -7,11 +7,11 @@ namespace MarksAppBackend
     internal abstract class DomainEventBase
     {
         public Guid Guid { get; private set; }
-        public uint Number { get; private set; }
+        public ulong Number { get; private set; }
         public DateTime Occured { get; private set; }
         public DateTime Recorded { get; private set; }
 
-        internal DomainEventBase(Guid guid, uint number, DateTime occured, DateTime recorded)
+        internal DomainEventBase(Guid guid, ulong number, DateTime occured, DateTime recorded)
         {
             if (guid != default(Guid))
                 Guid = guid;
@@ -23,7 +23,7 @@ namespace MarksAppBackend
                 Recorded = DateTime.Now;
         }
 
-        internal void SetNumber(uint number)
+        internal void SetNumber(ulong number)
         {
             if (Number == 0)
                 Number = number;
@@ -32,7 +32,7 @@ namespace MarksAppBackend
 
     internal abstract class DomainObjectChangedEvent : DomainEventBase
     {
-        public DomainObjectChangedEvent(Guid guid, uint number, DateTime occured, DateTime recorded)
+        public DomainObjectChangedEvent(Guid guid, ulong number, DateTime occured, DateTime recorded)
             : base(guid, number, occured, recorded) { }
 
         internal abstract void Process();
@@ -40,7 +40,7 @@ namespace MarksAppBackend
 
     internal abstract class DomainObjectCreatedEvent<T> : DomainEventBase
     {
-        public DomainObjectCreatedEvent(Guid guid, uint number, DateTime occured, DateTime recorded)
+        public DomainObjectCreatedEvent(Guid guid, ulong number, DateTime occured, DateTime recorded)
             : base(guid, number, occured, recorded) { }
 
         internal abstract T Process();
@@ -53,7 +53,7 @@ namespace MarksAppBackend
         public PlayerCreatedEvent(int id, DateTime occured)
             : this(id, Guid.NewGuid(), 0, occured, default(DateTime)) { }
 
-        internal PlayerCreatedEvent(int id, Guid guid, uint number, DateTime occured, DateTime recorded)
+        internal PlayerCreatedEvent(int id, Guid guid, ulong number, DateTime occured, DateTime recorded)
             : base(guid, number, occured, recorded)
         {
             ID = id;
@@ -73,7 +73,7 @@ namespace MarksAppBackend
         public MarkObtainedEvent(Player player, int tankID, int level, DateTime occured)
             : this(tankID, level, player.Guid, 0, occured, default(DateTime)) { }
 
-        internal MarkObtainedEvent(int tankID, int level, Guid guid, uint number, DateTime occured, DateTime recorded)
+        internal MarkObtainedEvent(int tankID, int level, Guid guid, ulong number, DateTime occured, DateTime recorded)
             : base(guid, number, occured, recorded)
         {
             TankID = tankID;
