@@ -6,39 +6,40 @@ namespace MarksAppBackend
 {
     internal static class Cache
     {
-        public static PlayerCache PlayerCache;
+        public static PlayerCache PlayerCache = new PlayerCache();
 
-        internal static void DumpNewObject(object obj)
+        public static void SetProcessor(EventProcessor processor)
         {
-            switch (obj)
+            processor.EventStored += (sender, e) => PlayEvent(e.Event);
+        }
+
+        internal static void PlayEvent(DomainEventBase e)
+        {
+            switch (e)
             {
-                case Player player: PlayerCache.AddNewPlayer(player); break;
+                case PlayerCreatedEvent playerCreated: ((ICache<Player>)PlayerCache).AddNew(Player.HandleEvent(playerCreated)); break;
+                case MarkObtainedEvent markObtained: PlayerCache[markObtained.Guid].HandleEvent(markObtained); break;
             }
         }
     }
 
-    internal class PlayerCache
+    internal interface ICache<T>
+    {
+        void AddNew(T item);
+    }
+
+    internal class PlayerCache : ICache<Player>
     {
         private Dictionary<Guid, Player> GuidCache = new Dictionary<Guid, Player>();
         private Dictionary<int, Player> IDCache = new Dictionary<int, Player>();
 
-        internal PlayerCache(EventProcessor processor, IEventStore store)
-        {
-            processor.EventStored += HandleEvents;
-        }
+        public Player this[Guid guid] => GuidCache[guid];
+        public Player this[int id] => IDCache[id];
 
-        internal void AddNewPlayer(Player player)
+        void ICache<Player>.AddNew(Player player)
         {
             GuidCache.Add(player.Guid, player);
             IDCache.Add(player.ID, player);
-        }
-
-        private void HandleEvents(object sender, EventStoredArgs e)
-        {
-            switch (e)
-            {
-                // dont handle creation here
-            }
         }
     }
 }

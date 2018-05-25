@@ -4,6 +4,8 @@ namespace MarksAppBackend
 {
     class Program
     {
+        private static Random Random = new Random();
+
         static void Main(string[] args)
         {
             if (Settings.Instance is null)
@@ -14,7 +16,21 @@ namespace MarksAppBackend
             DataBaseEventStore eventStore = new DataBaseEventStore(Settings.Instance.Database);
             EventProcessor eventProcessor = new EventProcessor(eventStore);
 
-            
+            Cache.SetProcessor(eventProcessor);
+            foreach (var @event in eventStore.GetAll())
+                eventProcessor.Replay(@event);
+
+
+            System.Diagnostics.Stopwatch watch = System.Diagnostics.Stopwatch.StartNew();
+            for (int i = 0; i < 123_000; i++)
+            {
+                var player = Player.Create(eventProcessor, i + 2354323);
+                for (int j = 0; j < 10; j++)
+                    player.AddMark(eventProcessor, j + 2143, 3);
+            }
+            Console.WriteLine(watch.Elapsed);
+
+                Cache.PlayerCache.ToString();
         }
 
         /*

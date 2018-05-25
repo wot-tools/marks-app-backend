@@ -31,5 +31,10 @@ namespace MarksAppBackend
             EventStored?.Invoke(this, new EventStoredArgs(e));
             return e;
         }
+
+        public void Replay(DomainEventBase e)
+        {
+            EventStored?.Invoke(this, new EventStoredArgs(e));
+        }
     }
 }

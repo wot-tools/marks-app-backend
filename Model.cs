@@ -19,11 +19,25 @@ namespace MarksAppBackend
 
         private Player() { }
 
-        public static Player Create(EventProcessor processor, int id)
+        internal static Player Create(EventProcessor processor, int id)
         {
-            var @event = processor.Process(new PlayerCreatedEvent(id, DateTime.Now));
+            var @event = processor.Process(new PlayerCreatedEvent(id));
+            return Cache.PlayerCache[@event.Guid];
 
+        }
 
+        internal void AddMark(EventProcessor processor, int tankID, int level)
+        {
+            processor.Process(new MarkObtainedEvent(this, tankID, level));
+        }
+
+        internal static Player HandleEvent(PlayerCreatedEvent e)
+        {
+            return new Player
+            {
+                Guid = e.Guid,
+                ID = e.ID,
+            };
         }
 
         internal void HandleEvent(MarkObtainedEvent e)

@@ -9,11 +9,18 @@ namespace MarksAppBackend
     internal interface IEventStore
     {
         void Store(DomainEventBase e);
+        IEnumerable<DomainEventBase> GetByID(int id);
+        IEnumerable<DomainEventBase> GetByGuid(Guid guid);
+        IEnumerable<DomainEventBase> GetByNumber(ulong number);
+        IEnumerable<DomainEventBase> GetNumberRange(ulong start, ulong end);
+        IEnumerable<DomainEventBase> GetAll();
     }
 
     internal class DataBaseEventStore : IEventStore
     {
         private MySqlConnection Connection;
+        private readonly JsonSerializerSettings JsonSettings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Objects };
+
 
         public DataBaseEventStore(string address, string database, string user, string password)
         {
@@ -39,11 +46,53 @@ namespace MarksAppBackend
             command.Parameters.AddWithValue("occured", e.Occured);
             command.Parameters.AddWithValue("recorded", e.Recorded);
 
-            string jsonData = JsonConvert.SerializeObject(e, new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Objects });
+            string jsonData = JsonConvert.SerializeObject(e, JsonSettings);
 
             command.Parameters.AddWithValue("data", jsonData);
 
             e.SetNumber((ulong)command.ExecuteScalar());
+        }
+
+        public IEnumerable<DomainEventBase> GetByID(int id)
+        {
+            return GetGeneric("id = ?insert_id", c => c.Parameters.AddWithValue("insert_id", id));
+        }
+
+        public IEnumerable<DomainEventBase> GetByGuid(Guid guid)
+        {
+            return GetGeneric("guid = ?insert_guid", c => c.Parameters.AddWithValue("insert_guid", guid));
+        }
+
+        public IEnumerable<DomainEventBase> GetByNumber(ulong number)
+        {
+            return GetGeneric("number = ?insert_number", c => c.Parameters.AddWithValue("insert_number", number));
+        }
+
+        public IEnumerable<DomainEventBase> GetNumberRange(ulong start, ulong end)
+        {
+            return GetGeneric("number BETWEEN ?start AND ?end", c =>
+            {
+                c.Parameters.AddWithValue("start", start);
+                c.Parameters.AddWithValue("end", end);
+            });
+        }
+
+        public IEnumerable<DomainEventBase> GetAll()
+        {
+            return GetGeneric(null, null);
+        }
+
+        private IEnumerable<DomainEventBase> GetGeneric(string where, Action<MySqlCommand> addValues)
+        {
+            MySqlCommand command = new MySqlCommand($"SELECT number, data FROM events{(String.IsNullOrEmpty(where) ? String.Empty : $" WHERE {where}")};", Connection);
+            addValues?.Invoke(command);
+            using (var reader = command.ExecuteReader())
+                while (reader.Read())
+                {
+                    var result = (DomainEventBase)JsonConvert.DeserializeObject((string)reader["data"], JsonSettings);
+                    result.SetNumber((ulong)reader["number"]);
+                    yield return result;
+                }
         }
     }
 }
