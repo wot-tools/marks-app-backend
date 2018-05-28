@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace MarksAppBackend
@@ -29,6 +30,18 @@ namespace MarksAppBackend
         internal void AddMark(EventProcessor processor, int tankID, int level)
         {
             processor.Process(new MarkObtainedEvent(this, tankID, level));
+        }
+
+        internal void AddMark(EventProcessor processor, IEnumerable<int> threeMarks = null, IEnumerable<int> twoMarks = null, IEnumerable<int> oneMarks = null)
+        {
+            IEnumerable<MarkObtainedEvent> convert(IEnumerable<int> tankIDs, int level)
+            {
+                if (tankIDs is null)
+                    return Enumerable.Empty<MarkObtainedEvent>();
+                return tankIDs.Select(id => new MarkObtainedEvent(this, id, level));
+            }
+
+            processor.ProcessMultiple(convert(threeMarks, 3).Concat(convert(twoMarks, 2)).Concat(convert(oneMarks, 1)));
         }
 
         internal static Player HandleEvent(PlayerCreatedEvent e)

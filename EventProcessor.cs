@@ -32,6 +32,13 @@ namespace MarksAppBackend
             return e;
         }
 
+        public void ProcessMultiple(IEnumerable<DomainEventBase> events)
+        {
+            EventStore.Store(events);
+            foreach (var @event in events)
+                EventStored?.Invoke(this, new EventStoredArgs(@event));
+        }
+
         public void Replay(DomainEventBase e)
         {
             EventStored?.Invoke(this, new EventStoredArgs(e));

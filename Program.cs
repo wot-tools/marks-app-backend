@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace MarksAppBackend
 {
@@ -16,17 +17,17 @@ namespace MarksAppBackend
             DataBaseEventStore eventStore = new DataBaseEventStore(Settings.Instance.Database);
             EventProcessor eventProcessor = new EventProcessor(eventStore);
 
+            System.Diagnostics.Stopwatch watch = System.Diagnostics.Stopwatch.StartNew();
             Cache.SetProcessor(eventProcessor);
             foreach (var @event in eventStore.GetAll())
                 eventProcessor.Replay(@event);
+            Console.WriteLine(watch.Elapsed);
 
-
-            System.Diagnostics.Stopwatch watch = System.Diagnostics.Stopwatch.StartNew();
-            for (int i = 0; i < 123_000; i++)
+            watch.Restart();
+            for (int i = 0; i < 12_000; i++)
             {
                 var player = Player.Create(eventProcessor, i + 2354323);
-                for (int j = 0; j < 10; j++)
-                    player.AddMark(eventProcessor, j + 2143, 3);
+                player.AddMark(eventProcessor, Enumerable.Range(13512, 10));
             }
             Console.WriteLine(watch.Elapsed);
 

@@ -2,13 +2,16 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace MarksAppBackend
 {
     internal interface IEventStore
     {
         void Store(DomainEventBase e);
+        void Store(IEnumerable<DomainEventBase> events);
         IEnumerable<DomainEventBase> GetByID(int id);
         IEnumerable<DomainEventBase> GetByGuid(Guid guid);
         IEnumerable<DomainEventBase> GetByNumber(ulong number);
@@ -51,6 +54,28 @@ namespace MarksAppBackend
             command.Parameters.AddWithValue("data", jsonData);
 
             e.SetNumber((ulong)command.ExecuteScalar());
+        }
+
+        public void Store(IEnumerable<DomainEventBase> events)
+        {
+            DomainEventBase[] data = events?.ToArray();
+            if ((events?.Count() ?? 0) < 1)
+                return;
+            
+            MySqlCommand command = new MySqlCommand(
+                $@"INSERT INTO events(guid, occured, recorded, data)
+                VALUES{String.Join(",", Enumerable.Range(0, data.Length).Select(i => $"(?guid{i}, ?occured{i}, ?recorded{i}, ?data{i})"))};", Connection);
+            for (int i = 0; i < data.Length; i++)
+            {
+                command.Parameters.AddWithValue($"guid{i}", data[i].Guid);
+                command.Parameters.AddWithValue($"occured{i}", data[i].Occured);
+                command.Parameters.AddWithValue($"recorded{i}", data[i].Recorded);
+
+                string jsonData = JsonConvert.SerializeObject(data[i], JsonSettings);
+                command.Parameters.AddWithValue($"data{i}", jsonData);
+            }
+
+            command.ExecuteNonQuery();
         }
 
         public IEnumerable<DomainEventBase> GetByID(int id)
