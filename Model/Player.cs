@@ -10,9 +10,9 @@ namespace MarksAppBackend.Model
         public Guid Guid { get; private set; }
         public string Name { get; private set; }
         public int ID { get; private set; }
-        private List<int> _ThreeMarks = new List<int>();
-        private List<int> _TwoMarks = new List<int>();
-        private List<int> _OneMarks = new List<int>();
+        private readonly List<int> _ThreeMarks = new List<int>();
+        private readonly List<int> _TwoMarks = new List<int>();
+        private readonly List<int> _OneMarks = new List<int>();
         public IEnumerable<int> ThreeMarks => _ThreeMarks;
         public IEnumerable<int> TwoMarks => _TwoMarks;
         public IEnumerable<int> OneMarks => _OneMarks;
