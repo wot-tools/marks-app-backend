@@ -59,7 +59,7 @@ namespace MarksAppBackend
         public void Store(IEnumerable<DomainEventBase> events)
         {
             DomainEventBase[] data = events?.ToArray();
-            if ((events?.Count() ?? 0) < 1)
+            if ((data?.Length ?? 0) < 1)
                 return;
             
             MySqlCommand command = new MySqlCommand(
